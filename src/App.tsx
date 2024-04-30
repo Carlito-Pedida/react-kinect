@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 
 interface Users {
@@ -14,20 +14,41 @@ interface Users {
 
 function App() {
   const [users, setUsers] = useState<Users[]>([]);
-  console.log(users);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     document.title = "Fetching Data";
   });
 
+  // useEffect(() => {
+  //   axios
+  //     .get<Users[]>("https://jsonplaceholder.typicode.com/users")
+  //     .then((res) => setUsers(res.data))
+  //     .catch((err) => setError(err.message));
+  // }, []);
+
   useEffect(() => {
-    axios
-      .get<Users[]>("https://jsonplaceholder.typicode.com/users")
-      .then((res) => setUsers(res.data));
+    const fetchData = async () => {
+      try {
+        const res = await axios.get<Users[]>(
+          "https://jsonplaceholder.typicode.com/users"
+        );
+        setUsers(res.data);
+      } catch (err) {
+        setError((err as AxiosError).message);
+      }
+    };
+    fetchData();
   }, []);
 
   return (
     <div>
+      {error && (
+        <h3 className="text-danger">
+          {error}! <br />
+          Please check the URL
+        </h3>
+      )}
       <ul>
         {users.map((user) => (
           <div key={user.id}>
