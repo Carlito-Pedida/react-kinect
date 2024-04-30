@@ -1,38 +1,45 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
-import "./App.css";
-import ProductList from "./component/ProductList";
+
+interface Users {
+  id: number;
+  name: string;
+  address: {
+    street: string;
+    suite: string;
+    city: string;
+    zipcode: string;
+  };
+}
 
 function App() {
-  const [category, setCategory] = useState("");
-
-  const connect = () => {
-    console.log("Connecting");
-  };
-  const disConnect = () => {
-    console.log("Disconnecting");
-  };
+  const [users, setUsers] = useState<Users[]>([]);
+  console.log(users);
 
   useEffect(() => {
-    document.title = "UseEffect Lesson";
+    document.title = "Fetching Data";
   });
 
   useEffect(() => {
-    connect();
-
-    return () => disConnect();
-  });
+    axios
+      .get<Users[]>("https://jsonplaceholder.typicode.com/users")
+      .then((res) => setUsers(res.data));
+  }, []);
 
   return (
     <div>
-      <select
-        className="form-select"
-        onChange={(event) => setCategory(event.target.value)}
-      >
-        <option value=""></option>
-        <option value="Clothing">Clothing</option>
-        <option value="Household">Household</option>
-      </select>
-      <ProductList category={category} />
+      <ul>
+        {users.map((user) => (
+          <div key={user.id}>
+            <li>{user.name}</li>
+            <p>
+              {user.address.street} {user.address.suite}
+              <br />
+              {user.address.city} {user.address.zipcode}
+            </p>
+          </div>
+        ))}
+      </ul>
     </div>
   );
 }
