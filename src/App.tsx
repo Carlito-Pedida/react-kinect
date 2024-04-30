@@ -4,12 +4,6 @@ import { useEffect, useState } from "react";
 interface Users {
   id: number;
   name: string;
-  address: {
-    street: string;
-    suite: string;
-    city: string;
-    zipcode: string;
-  };
 }
 
 function App() {
@@ -50,19 +44,55 @@ function App() {
     return () => controller.abort();
   }, []);
 
+  const deleteUser = (user: Users) => {
+    const originalUsers = [...users];
+    setUsers(users.filter((u) => u.id !== user.id));
+
+    axios
+      .delete("https://jsonplaceholder.typicode.com/users" + user.id)
+      .catch((err) => {
+        setError(err.message);
+        setUsers(originalUsers);
+      });
+  };
+
+  const addUser = () => {
+    const originalUsers = [...users];
+    const newUser = { id: 0, name: "Bhoying" };
+    setUsers([newUser, ...users]);
+
+    axios
+      .post("https://jsonplaceholder.typicode.com/users", newUser)
+      .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
+      .catch((err) => {
+        setError(err.message);
+        setUsers(originalUsers);
+      });
+  };
+
   return (
     <div>
       {error && <h3 className="text-danger">{error}!</h3>}
       {isLoading && <div className="text-secondary spinner-border"></div>}
-      <ul>
+      <div onClick={addUser} className="mb-3 btn btn-primary">
+        Add User
+      </div>
+      <ul className="list-group">
         {users.map((user) => (
-          <div key={user.id}>
-            <li>{user.name}</li>
-            <p>
-              {user.address.street} {user.address.suite}
-              <br />
-              {user.address.city} {user.address.zipcode}
-            </p>
+          <div className="" key={user.id}>
+            <div>
+              <li className="list-group-item d-flex justify-content-between  align-items-center">
+                <div>
+                  <p>{user.name}</p>
+                </div>
+                <button
+                  className="btn btn-outline-danger"
+                  onClick={() => deleteUser(user)}
+                >
+                  Delete
+                </button>
+              </li>
+            </div>
           </div>
         ))}
       </ul>
