@@ -15,6 +15,7 @@ interface Users {
 function App() {
   const [users, setUsers] = useState<Users[]>([]);
   const [error, setError] = useState("");
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     document.title = "Cancel Fetching Data";
@@ -28,6 +29,7 @@ function App() {
   // }, []);
 
   useEffect(() => {
+    setLoading(true);
     const controller = new AbortController();
     const fetchData = async () => {
       try {
@@ -36,9 +38,11 @@ function App() {
           { signal: controller.signal }
         );
         setUsers(res.data);
+        setLoading(false);
       } catch (err) {
         if (err instanceof CanceledError) return;
         setError((err as AxiosError).message);
+        setLoading(false);
       }
     };
 
@@ -49,6 +53,7 @@ function App() {
   return (
     <div>
       {error && <h3 className="text-danger">{error}!</h3>}
+      {isLoading && <div className="text-secondary spinner-border"></div>}
       <ul>
         {users.map((user) => (
           <div key={user.id}>
