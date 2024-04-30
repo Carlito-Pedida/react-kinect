@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
-import apiClient, { CanceledError, AxiosError } from "./services/api-client";
-
-interface Users {
-  id: number;
-  name: string;
-}
+import { CanceledError, AxiosError } from "./services/api-client";
+import userService, { Users } from "./services/user-service";
 
 function App() {
   const [users, setUsers] = useState<Users[]>([]);
@@ -12,35 +8,30 @@ function App() {
   const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Cancel Fetching Data";
-  });
-
-  useEffect(() => {
     setLoading(true);
-    const controller = new AbortController();
-    const fetchData = async () => {
-      try {
-        const res = await apiClient.get<Users[]>("/users/", {
-          signal: controller.signal
-        });
+    const { request, cancel } = userService.getAllUsers();
+    request
+      .then((res) => {
         setUsers(res.data);
         setLoading(false);
-      } catch (err) {
+      })
+      .catch((err) => {
         if (err instanceof CanceledError) return;
         setError((err as AxiosError).message);
         setLoading(false);
-      }
-    };
-
-    fetchData();
-    return () => controller.abort();
+      });
+    return () => cancel();
   }, []);
+
+  useEffect(() => {
+    document.title = "Cancel Fetching Data";
+  });
 
   const deleteUser = (user: Users) => {
     const originalUsers = [...users];
     setUsers(users.filter((u) => u.id !== user.id));
 
-    apiClient.delete("/users/" + user.id).catch((err) => {
+    userService.deleteUser(user.id).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
@@ -51,8 +42,8 @@ function App() {
     const newUser = { id: 0, name: "Bhoying" };
     setUsers([newUser, ...users]);
 
-    apiClient
-      .post("/users/", newUser)
+    userService
+      .addUser(newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
       .catch((err) => {
         setError(err.message);
@@ -66,7 +57,7 @@ function App() {
     const updatedUser = { ...user, name: user.name + "!" };
     setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
 
-    apiClient.patch("/users/" + user.id, updatedUser).catch((err) => {
+    userService.updateUser(updatedUser).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
@@ -113,8 +104,22 @@ function App() {
 export default App;
 
 // useEffect(() => {
-//   axios
-//     .get<Users[]>("https://jsonplaceholder.typicode.com/users")
-//     .then((res) => setUsers(res.data))
-//     .catch((err) => setError(err.message));
+//   setLoading(true);
+//   const controller = new AbortController();
+//   const fetchData = async () => {
+//     try {
+//       const res = await apiClient.get<Users[]>("/users/", {
+//         signal: controller.signal
+//       });
+//       setUsers(res.data);
+//       setLoading(false);
+//     } catch (err) {
+//       if (err instanceof CanceledError) return;
+//       setError((err as AxiosError).message);
+//       setLoading(false);
+//     }
+//   };
+
+//   fetchData();
+//   return () => controller.abort();
 // }, []);
