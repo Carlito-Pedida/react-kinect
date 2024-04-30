@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, CanceledError } from "axios";
 import { useEffect, useState } from "react";
 
 interface Users {
@@ -17,7 +17,7 @@ function App() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    document.title = "Fetching Data";
+    document.title = "Cancel Fetching Data";
   });
 
   // useEffect(() => {
@@ -28,27 +28,27 @@ function App() {
   // }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     const fetchData = async () => {
       try {
         const res = await axios.get<Users[]>(
-          "https://jsonplaceholder.typicode.com/users"
+          "https://jsonplaceholder.typicode.com/users",
+          { signal: controller.signal }
         );
         setUsers(res.data);
       } catch (err) {
+        if (err instanceof CanceledError) return;
         setError((err as AxiosError).message);
       }
     };
+
     fetchData();
+    return () => controller.abort();
   }, []);
 
   return (
     <div>
-      {error && (
-        <h3 className="text-danger">
-          {error}! <br />
-          Please check the URL
-        </h3>
-      )}
+      {error && <h3 className="text-danger">{error}!</h3>}
       <ul>
         {users.map((user) => (
           <div key={user.id}>
