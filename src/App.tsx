@@ -1,27 +1,9 @@
-import { useEffect, useState } from "react";
-import { CanceledError, AxiosError } from "./services/api-client";
+import { useEffect } from "react";
 import userService, { Users } from "./services/user-service";
+import useUsers from "./hooks/useUsers";
 
 function App() {
-  const [users, setUsers] = useState<Users[]>([]);
-  const [error, setError] = useState("");
-  const [isLoading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setLoading(true);
-    const { request, cancel } = userService.getAllUsers();
-    request
-      .then((res) => {
-        setUsers(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        if (err instanceof CanceledError) return;
-        setError((err as AxiosError).message);
-        setLoading(false);
-      });
-    return () => cancel();
-  }, []);
+  const { users, error, isLoading, setUsers, setError } = useUsers();
 
   useEffect(() => {
     document.title = "Cancel Fetching Data";
@@ -31,19 +13,19 @@ function App() {
     const originalUsers = [...users];
     setUsers(users.filter((u) => u.id !== user.id));
 
-    userService.deleteUser(user.id).catch((err) => {
+    userService.delete(user.id).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
   };
 
-  const addUser = () => {
+  const createUser = () => {
     const originalUsers = [...users];
     const newUser = { id: 0, name: "Bhoying" };
     setUsers([newUser, ...users]);
 
     userService
-      .addUser(newUser)
+      .create(newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
       .catch((err) => {
         setError(err.message);
@@ -57,7 +39,7 @@ function App() {
     const updatedUser = { ...user, name: user.name + "!" };
     setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
 
-    userService.updateUser(updatedUser).catch((err) => {
+    userService.update(updatedUser).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
@@ -67,7 +49,7 @@ function App() {
     <div>
       {error && <h3 className="text-danger">{error}!</h3>}
       {isLoading && <div className="text-secondary spinner-border"></div>}
-      <div onClick={addUser} className="mb-3 btn btn-primary">
+      <div onClick={createUser} className="mb-3 btn btn-primary">
         Add User
       </div>
       <ul className="list-group">
