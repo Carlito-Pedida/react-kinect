@@ -9,7 +9,7 @@ function App() {
 
   useEffect(() => {
     setLoading(true);
-    const { request, cancel } = userService.getAllUsers();
+    const { request, cancel } = userService.getAll<Users>();
     request
       .then((res) => {
         setUsers(res.data);
@@ -31,19 +31,19 @@ function App() {
     const originalUsers = [...users];
     setUsers(users.filter((u) => u.id !== user.id));
 
-    userService.deleteUser(user.id).catch((err) => {
+    userService.delete(user.id).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
   };
 
-  const addUser = () => {
+  const createUser = () => {
     const originalUsers = [...users];
     const newUser = { id: 0, name: "Bhoying" };
     setUsers([newUser, ...users]);
 
     userService
-      .addUser(newUser)
+      .create(newUser)
       .then(({ data: savedUser }) => setUsers([savedUser, ...users]))
       .catch((err) => {
         setError(err.message);
@@ -57,7 +57,7 @@ function App() {
     const updatedUser = { ...user, name: user.name + "!" };
     setUsers(users.map((u) => (u.id === user.id ? updatedUser : u)));
 
-    userService.updateUser(updatedUser).catch((err) => {
+    userService.update(updatedUser).catch((err) => {
       setError(err.message);
       setUsers(originalUsers);
     });
@@ -67,7 +67,7 @@ function App() {
     <div>
       {error && <h3 className="text-danger">{error}!</h3>}
       {isLoading && <div className="text-secondary spinner-border"></div>}
-      <div onClick={addUser} className="mb-3 btn btn-primary">
+      <div onClick={createUser} className="mb-3 btn btn-primary">
         Add User
       </div>
       <ul className="list-group">
